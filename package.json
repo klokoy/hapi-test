@@ -1,0 +1,24 @@
+{
+  "name": "hapi-test",
+  "version": "0.0.0",
+  "description": "Simple testing of hapi apis without starting a server",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "keywords": [
+    "hapi",
+    "api",
+    "test"
+  ],
+  "author": "Kim Lokøy",
+  "license": "MIT",
+  "dependencies": {
+    "es6-promise": "^1.0.0",
+    "hapi": "^6.0.2",
+    "lodash": "^2.4.1"
+  },
+  "devDependencies": {
+    "chai": "^1.9.1"
+  }
+}
