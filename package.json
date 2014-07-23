@@ -4,7 +4,7 @@
   "description": "Simple testing of hapi apis without starting a server",
   "main": "index.js",
   "scripts": {
-    "test": "npm test"
+    "test": "mocha test"
   },
   "keywords": [
     "hapi",
