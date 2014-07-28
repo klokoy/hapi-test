@@ -1,5 +1,5 @@
 var assert = require('chai').assert,
-    HapiTest = require('../index.js').HapiTest,
+    hapiTest = require('../index.js'),
     Boom = require('boom');
 
 describe('hapi-test', function () {
@@ -26,49 +26,34 @@ describe('hapi-test', function () {
 
 
         it('should support GET', function (done) {
-            new HapiTest(plugin)
-                .then(function (hapiTest) {
-                    hapiTest
-                        .get('/')
-                        .assert(200, done);
-                });
+            hapiTest(plugin)
+                .get('/')
+                .assert(200, done);
+
         });
 
         it('should support POST', function (done) {
-            new HapiTest(plugin)
-                .then(function (hapiTest) {
-                    hapiTest
-                        .post('/', {})
-                        .assert(200, done);
-                });
+            hapiTest(plugin)
+                .post('/', {})
+                .assert(200, done);
         });
 
         it('should support PUT', function (done) {
-            new HapiTest(plugin)
-                .then(function (hapiTest) {
-                    hapiTest
-                        .put('/', {})
-                        .assert(200, done);
-                });
+            hapiTest(plugin)
+                .put('/', {})
+                .assert(200, done);
         });
 
         it('should support PATCH', function (done) {
-            new HapiTest(plugin)
-                .then(function (hapiTest) {
-                    hapiTest
-                        .patch('/', {})
-                        .assert(200, done);
-                });
+            hapiTest(plugin)
+                .patch('/', {})
+                .assert(200, done);
         });
 
         it('should support DELETE', function (done) {
-            new HapiTest(plugin)
-                .then(function (hapiTest) {
-                    hapiTest
-                        .delete('/')
-                        .assert(200, done);
-                });
-
+            hapiTest(plugin)
+                .delete('/')
+                .assert(200, done);
         })
     });
 
@@ -92,76 +77,56 @@ describe('hapi-test', function () {
         };
 
         it('assert a number should check the status code', function (done) {
-            new HapiTest(plugin)
-                .then(function (hapiTest) {
-
-                    hapiTest
-                        .get('/one')
-                        .assert(200, done);
-                });
+            hapiTest(plugin)
+                .get('/one')
+                .assert(200, done);
         });
 
         it('should pass assertion errors to the end method', function (done) {
-            new HapiTest(plugin)
-                .then(function (hapiTest) {
-                    hapiTest
-                        .get('/one')
-                        .assert(1000)
-                        .end(function (result, errs) {
-                            assert(errs);
-                            assert.equal(errs[0], 'the status code is: 200 but should be: 1000');
-                            done()
-                        });
+            hapiTest(plugin)
+                .get('/one')
+                .assert(1000)
+                .end(function (result, errs) {
+                    assert(errs);
+                    assert.equal(errs[0], 'the status code is: 200 but should be: 1000');
+                    done()
                 });
         });
 
         it('should allow passing in an assertion function', function (done) {
-            new HapiTest(plugin)
-                .then(function (hapiTest) {
-                    hapiTest
-                        .get('/one')
-                        .assert(function (res) {
-                            return res.statusCode === 200;
-                        }, done);
-                });
+            hapiTest(plugin)
+                .get('/one')
+                .assert(function (res) {
+                    return res.statusCode === 200;
+                }, done);
         });
 
         it('if called with 2 strings: match headers[string1] with string2 ', function (done) {
-            new HapiTest(plugin)
-                .then(function (hapiTest) {
-                    hapiTest
-                        .get('/one')
-                        .assert('connection', 'keep-alive', done);
-                });
+            hapiTest(plugin)
+                .get('/one')
+                .assert('connection', 'keep-alive', done);
         });
 
         it('convert string to regex when called with 2 strings', function (done) {
-            new HapiTest(plugin)
-                .then(function (hapiTest) {
-                    hapiTest
-                        .get('/one')
-                        .assert('connection', 'keep', done);
-                });
+            hapiTest(plugin)
+                .get('/one')
+                .assert('connection', 'keep', done);
         });
         it('should supply get response to end handler', function (done) {
 
-            new HapiTest(plugin)
-                .then(function (hapiTest) {
-
-                    hapiTest
-                        .get('/one')
-                        .end(function (res) {
-                            assert(res);
-                            assert.equal(res.result, 1);
-                            done();
-                        });
+            hapiTest(plugin)
+                .get('/one')
+                .end(function (res) {
+                    assert(res);
+                    assert.equal(res.result, 1);
+                    done();
                 });
 
         });
     });
 
     describe('plugins', function () {
-        it('should support multiple plugins', function () {
+        it('should support multiple plugins', function (done) {
             var plugin1 = {
                 register: function (plugin, options, next) {
 
@@ -196,18 +161,14 @@ describe('hapi-test', function () {
                 }
             };
 
-            new HapiTest([plugin1, plugin2])
-                .then(function (hapiTest) {
-
-                    hapiTest
-                        .get('/one')
-                        .assert(200)
-                        .get('/two')
-                        .assert(200, done);
-                });
+            hapiTest([plugin1, plugin2])
+                .get('/one')
+                .assert(200)
+                .get('/two')
+                .assert(200, done);
 
         })
-    })
+    });
 
     it('should trigger queued requests', function (done) {
         var plugin = {
@@ -238,21 +199,16 @@ describe('hapi-test', function () {
         };
 
 
-        new HapiTest(plugin)
-            .then(function (hapiTest) {
-                var max = {name: 'Max', _id: 1},
-                    lui = {name: 'Lui', _id: 2};
-
-
-                hapiTest
-                    .post('/persons', max)
-                    .post('/persons', lui)
-                    .get('/persons')
-                    .end(function (res) {
-                        assert(res);
-                        assert.deepEqual([max, lui], res.result);
-                        done();
-                    });
+        var max = {name: 'Max', _id: 1},
+            lui = {name: 'Lui', _id: 2};
+        hapiTest(plugin)
+            .post('/persons', max)
+            .post('/persons', lui)
+            .get('/persons')
+            .end(function (res) {
+                assert(res);
+                assert.deepEqual([max, lui], res.result);
+                done();
             });
     });
 
@@ -326,16 +282,12 @@ describe('hapi-test', function () {
 
         it('should support hapi-auth-cookie', function (done) {
 
-                new HapiTest(plugin, {before: before})
-                    .then(function (hapiTest) {
-
-                        hapiTest
-                            .auth('max', 'max')
-                            .get('/')
-                            .end(function (res) {
-                                assert.equal(res.payload, 1);
-                                done();
-                            });
+                hapiTest(plugin, {before: before})
+                    .auth('max', 'max')
+                    .get('/')
+                    .end(function (res) {
+                        assert.equal(res.payload, 1);
+                        done();
                     });
 
             }
@@ -343,17 +295,13 @@ describe('hapi-test', function () {
 
         it('should redirect "302" with wrong credentials', function (done) {
 
-                new HapiTest(plugin, {before: before})
-                    .then(function (hapiTest) {
-
-                        hapiTest
-                            .auth('max', 'p')
-                            .get('/')
-                            .assert(302)
-                            .end(function (res) {
-                                assert.match(res.headers.location, /login/);
-                                done();
-                            });
+                hapiTest(plugin, {before: before})
+                    .auth('max', 'p')
+                    .get('/')
+                    .assert(302)
+                    .end(function (res) {
+                        assert.match(res.headers.location, /login/);
+                        done();
                     });
 
             }

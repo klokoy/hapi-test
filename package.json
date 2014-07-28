@@ -1,26 +1,25 @@
 {
-  "name": "hapi-test",
-  "version": "0.0.0",
-  "description": "Simple testing of hapi apis without starting a server",
-  "main": "index.js",
-  "scripts": {
-    "test": "mocha test"
-  },
-  "keywords": [
-    "hapi",
-    "api",
-    "test"
-  ],
-  "author": "Kim Lokøy",
-  "license": "MIT",
-  "dependencies": {
-    "es6-promise": "^1.0.0",
-    "hapi": "^6.0.2",
-    "lodash": "^2.4.1"
-  },
-  "devDependencies": {
-    "boom": "^2.4.2",
-    "chai": "^1.9.1",
-    "hapi-auth-cookie": "^1.3.1"
-  }
+    "name": "hapi-test",
+    "version": "0.0.1",
+    "description": "Simple testing of hapi apis without starting a server",
+    "main": "index.js",
+    "scripts": {
+        "test": "mocha test"
+    },
+    "keywords": [
+        "hapi",
+        "api",
+        "test"
+    ],
+    "author": "Kim Lokøy",
+    "license": "MIT",
+    "dependencies": {
+        "hapi": "^6.0.2",
+        "lodash": "^2.4.1"
+    },
+    "devDependencies": {
+        "boom": "^2.4.2",
+        "chai": "^1.9.1",
+        "hapi-auth-cookie": "^1.3.1"
+    }
 }

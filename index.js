@@ -1,2 +1,2 @@
 
-exports.HapiTest = require('./src/hapiTest.js').HapiTest;
+module.exports = require('./src/hapiTest.js');

@@ -1,43 +1,52 @@
-var Promise = require('es6-promise').Promise,
-    Hapi = require('hapi'),
+var Hapi = require('hapi'),
     _ = require('lodash');
+
+
+module.exports = function (plugins, options) {
+    return new HapiTest(plugins, options);
+};
 
 var HapiTest = function (plugins, options) {
     var self = this;
 
-    return new Promise(function (resolve, reject) {
+    if (_.isArray(plugins)) {
+        self.plugins = plugins;
+    } else {
+        self.plugins = [plugins];
+    }
+    //options can be cleared
+    self.requests = [];
+    //setup can be kept between calls
+    self.setup = {};
 
-        if (_.isArray(plugins)) {
-            self.plugins = plugins;
-        } else {
-            self.plugins = [plugins];
-        }
-        //options can be cleared
-        self.requests = [];
-        //setup can be kept between calls
-        self.setup = {};
+    self.options = options;
 
-        self.server = new Hapi.Server();
-
-        if (options && options.before) {
-            options.before(self.server);
-        }
-
-        self.plugins.forEach(function (plugin, index) {
-            self.server.pack.register({
-                name: 'plugin' + index,
-                version: '0.0.1',
-                register: plugin.register
-            }, function () {
-                if (index === self.plugins.length - 1) {
-                    resolve(self);
-                }
-            });
-        })
-
-    });
-
+    return self;
 };
+
+HapiTest.prototype._init = function (callback) {
+    var self = this;
+
+
+    self.server = new Hapi.Server();
+
+    if (self.options && self.options.before) {
+        self.options.before(self.server);
+    }
+
+    self.plugins.forEach(function (plugin, index) {
+        self.server.pack.register({
+            name: 'plugin' + index,
+            version: '0.0.1',
+            register: plugin.register
+        }, function () {
+            if (index === self.plugins.length - 1) {
+                callback();
+            }
+        });
+    })
+
+}
 
 HapiTest.prototype.get = function (url, query) {
 
@@ -197,34 +206,35 @@ HapiTest.prototype.end = function (callback) {
 
     var self = this;
 
-    //run all request, return result in callback for the last request
-    function handleRequest(n) {
-        var request = self.requests[n];
-        self.server.inject(_.merge(request.options, self.setup), function (result) {
-            //If rejections for this request has been registered run them and collect errs
-            if (request.rejections) {
-                request.rejections.forEach(function (rejection) {
-                    var failed = rejection(result);
+    self._init(function () {
 
-                    if (failed) {
-                        if (!request.errs) {
-                            request.errs = [];
+        //run all request, return result in callback for the last request
+        function handleRequest(n) {
+            var request = self.requests[n];
+            self.server.inject(_.merge(request.options, self.setup), function (result) {
+                //If rejections for this request has been registered run them and collect errs
+                if (request.rejections) {
+                    request.rejections.forEach(function (rejection) {
+                        var failed = rejection(result);
+
+                        if (failed) {
+                            if (!request.errs) {
+                                request.errs = [];
+                            }
+                            request.errs.push(failed);
                         }
-                        request.errs.push(failed);
-                    }
-                })
-            }
+                    })
+                }
 
-            if (n === self.requests.length - 1) {
-                //If this is the last request fire the callback
-                callback(result, request.errs);
-            } else {
-                handleRequest(n + 1);
-            }
-        });
-    }
+                if (n === self.requests.length - 1) {
+                    //If this is the last request fire the callback
+                    callback(result, request.errs);
+                } else {
+                    handleRequest(n + 1);
+                }
+            });
+        }
 
-    handleRequest(0);
+        handleRequest(0);
+    })
 };
-
-exports.HapiTest = HapiTest;
