@@ -3,6 +3,74 @@ var assert = require('chai').assert,
 
 describe('hapi-test', function () {
 
+    //Test that all verbs are supported
+    describe('verbs', function () {
+
+        //simple plugin with all supported verbs
+        var plugin = {
+            register: function (plugin, options, next) {
+                plugin.route([
+                    {
+                        method: '*',
+                        path: '/',
+                        handler: function (request, reply) {
+                            reply(1);
+                        }
+                    }
+                ]);
+
+                next();
+            }
+        };
+
+
+        it('should support GET', function (done) {
+            new HapiTest(plugin)
+                .then(function (hapiTest) {
+                    hapiTest
+                        .get('/')
+                        .assert(200, done);
+                });
+        });
+
+        it('should support POST', function (done) {
+            new HapiTest(plugin)
+                .then(function (hapiTest) {
+                    hapiTest
+                        .post('/', {})
+                        .assert(200, done);
+                });
+        });
+
+        it('should support PUT', function (done) {
+            new HapiTest(plugin)
+                .then(function (hapiTest) {
+                    hapiTest
+                        .put('/', {})
+                        .assert(200, done);
+                });
+        });
+
+        it('should support PATCH', function (done) {
+            new HapiTest(plugin)
+                .then(function (hapiTest) {
+                    hapiTest
+                        .patch('/', {})
+                        .assert(200, done);
+                });
+        });
+
+        it('should support DELETE', function(done) {
+            new HapiTest(plugin)
+                .then(function (hapiTest) {
+                    hapiTest
+                        .delete('/')
+                        .assert(200, done);
+                });
+
+        })
+    });
+
     describe('abc', function () {
 
         var plugin = {

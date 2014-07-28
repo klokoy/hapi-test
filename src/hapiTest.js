@@ -1,4 +1,3 @@
-
 var Promise = require('es6-promise').Promise,
     Hapi = require('hapi'),
     _ = require('lodash');
@@ -45,11 +44,55 @@ HapiTest.prototype.get = function (url, query) {
     return this;
 };
 
+HapiTest.prototype.delete = function (url) {
+
+    var request = {
+        options: {
+            method: 'delete',
+            url: url
+        }
+    };
+
+    this.requests.push(request);
+
+    return this;
+};
+
 HapiTest.prototype.post = function (url, payload) {
 
     var request = {
         options: {
             method: 'post',
+            url: url,
+            payload: payload
+        }
+    };
+
+    this.requests.push(request);
+
+    return this;
+};
+
+HapiTest.prototype.put = function (url, payload) {
+
+    var request = {
+        options: {
+            method: 'put',
+            url: url,
+            payload: payload
+        }
+    };
+
+    this.requests.push(request);
+
+    return this;
+};
+
+HapiTest.prototype.patch = function (url, payload) {
+
+    var request = {
+        options: {
+            method: 'patch',
             url: url,
             payload: payload
         }
@@ -82,7 +125,7 @@ HapiTest.prototype.assert = function (a, b, c) {
             });
         }
     } else if (_.isFunction(a)) {
-        request.rejections.push(function(res) {
+        request.rejections.push(function (res) {
             return !a(res);
         });
         if (_.isFunction(b)) {
