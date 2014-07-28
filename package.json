@@ -1,7 +1,7 @@
 {
     "name": "hapi-test",
     "version": "0.0.1",
-    "description": "Simple testing of hapi apis without starting a server",
+    "description": "Test hapi plugins with chaining method calls and assertions",
     "main": "index.js",
     "scripts": {
         "test": "mocha test"
