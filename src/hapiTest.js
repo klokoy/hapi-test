@@ -2,12 +2,16 @@ var Promise = require('es6-promise').Promise,
     Hapi = require('hapi'),
     _ = require('lodash');
 
-var HapiTest = function (plugin, options) {
+var HapiTest = function (plugins, options) {
     var self = this;
 
     return new Promise(function (resolve, reject) {
 
-        self.plugin = plugin;
+        if (_.isArray(plugins)) {
+            self.plugins = plugins;
+        } else {
+            self.plugins = [plugins];
+        }
         //options can be cleared
         self.requests = [];
         //setup can be kept between calls
@@ -19,13 +23,18 @@ var HapiTest = function (plugin, options) {
             options.before(self.server);
         }
 
-        self.server.pack.register({
-            name: 'plugin',
-            version: '0.0.1',
-            register: self.plugin.register
-        }, function () {
-            resolve(self);
-        });
+        self.plugins.forEach(function (plugin, index) {
+            self.server.pack.register({
+                name: 'plugin' + index,
+                version: '0.0.1',
+                register: plugin.register
+            }, function () {
+                if (index === self.plugins.length - 1) {
+                    resolve(self);
+                }
+            });
+        })
+
     });
 
 };
@@ -128,6 +137,15 @@ HapiTest.prototype.assert = function (a, b, c) {
                 b(errs);
             });
         }
+    } else if (_.isString(a)) {
+        request.rejections.push(function (res) {
+            return !res.headers[a].match(new RegExp(b));
+        });
+        if (_.isFunction(c)) {
+            self.end(function (res, errs) {
+                c(errs);
+            });
+        }
     } else if (_.isFunction(a)) {
         request.rejections.push(function (res) {
             return !a(res);
@@ -156,8 +174,8 @@ HapiTest.prototype.auth = function (username, password) {
     };
 
     request.rejections = [function (result) {
-        if (result.statusCode === 401 ) {
-            return 'Login failed';
+        if (result.statusCode === 401) {
+            return false;
         } else {
             var header = result.headers['set-cookie'];
 

@@ -72,7 +72,7 @@ describe('hapi-test', function () {
         })
     });
 
-    describe('abc', function () {
+    describe('assertions', function () {
 
         var plugin = {
             register: function (plugin, options, next) {
@@ -126,6 +126,23 @@ describe('hapi-test', function () {
                 });
         });
 
+        it('if called with 2 strings: match headers[string1] with string2 ', function (done) {
+            new HapiTest(plugin)
+                .then(function (hapiTest) {
+                    hapiTest
+                        .get('/one')
+                        .assert('connection', 'keep-alive', done);
+                });
+        });
+
+        it('convert string to regex when called with 2 strings', function (done) {
+            new HapiTest(plugin)
+                .then(function (hapiTest) {
+                    hapiTest
+                        .get('/one')
+                        .assert('connection', 'keep', done);
+                });
+        });
         it('should supply get response to end handler', function (done) {
 
             new HapiTest(plugin)
@@ -143,6 +160,54 @@ describe('hapi-test', function () {
         });
     });
 
+    describe('plugins', function () {
+        it('should support multiple plugins', function () {
+            var plugin1 = {
+                register: function (plugin, options, next) {
+
+                    plugin.route([
+                        {
+                            method: 'GET',
+                            path: '/one',
+                            handler: function (request, reply) {
+                                reply(1);
+                            }
+                        }
+                    ]);
+
+                    next();
+                }
+            };
+
+            var plugin2 = {
+                register: function (plugin, options, next) {
+
+                    plugin.route([
+                        {
+                            method: 'GET',
+                            path: '/two',
+                            handler: function (request, reply) {
+                                reply(2);
+                            }
+                        }
+                    ]);
+
+                    next();
+                }
+            };
+
+            new HapiTest([plugin1, plugin2])
+                .then(function (hapiTest) {
+
+                    hapiTest
+                        .get('/one')
+                        .assert(200)
+                        .get('/two')
+                        .assert(200, done);
+                });
+
+        })
+    })
 
     it('should trigger queued requests', function (done) {
         var plugin = {
