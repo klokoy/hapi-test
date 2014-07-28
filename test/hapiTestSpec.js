@@ -1,5 +1,6 @@
 var assert = require('chai').assert,
-    HapiTest = require('../index.js').HapiTest;
+    HapiTest = require('../index.js').HapiTest,
+    Boom = require('boom');
 
 describe('hapi-test', function () {
 
@@ -60,7 +61,7 @@ describe('hapi-test', function () {
                 });
         });
 
-        it('should support DELETE', function(done) {
+        it('should support DELETE', function (done) {
             new HapiTest(plugin)
                 .then(function (hapiTest) {
                     hapiTest
@@ -190,4 +191,108 @@ describe('hapi-test', function () {
             });
     });
 
+    describe('hapi-auth-cookie', function () {
+        var plugin = {
+            register: function (plugin, options, next) {
+
+                plugin.route([
+                    {
+                        method: 'GET',
+                        path: '/',
+                        config: {
+                            handler: function (request, reply) {
+                                reply(1);
+                            },
+                            auth: 'session'
+                        }
+                    }
+                ]);
+
+                next();
+            }
+        };
+
+        //function to setup auth on the server
+        var before = function (server) {
+            server.pack.register(require('hapi-auth-cookie'), function (err) {
+
+                server.auth.strategy('session', 'cookie', {
+                    password: 'secret',
+                    cookie: 'session',
+                    redirectTo: '/login',
+                    isSecure: false
+                });
+
+                server.route([
+                    {
+                        method: 'POST',
+                        path: '/login',
+                        config: {
+                            handler: function (request, reply) {
+
+                                var user = {
+                                    id: 1,
+                                    name: 'max',
+                                    password: 'max'
+                                };
+
+                                if (request.payload.username !== 'max' || request.payload.password !== 'max') {
+                                    return reply(Boom.unauthorized('wrong credentials'));
+                                }
+
+                                request.auth.session.set(user);
+                                return reply.redirect('/')
+                            },
+                            auth: {
+                                mode: 'try',
+                                strategy: 'session'
+                            },
+                            plugins: {
+                                'hapi-auth-cookie': {
+                                    redirectTo: false
+                                }
+                            }
+                        }
+                    }
+                ]);
+            });
+        };
+
+
+        it('should support hapi-auth-cookie', function (done) {
+
+                new HapiTest(plugin, {before: before})
+                    .then(function (hapiTest) {
+
+                        hapiTest
+                            .auth('max', 'max')
+                            .get('/')
+                            .end(function (res) {
+                                assert.equal(res.payload, 1);
+                                done();
+                            });
+                    });
+
+            }
+        );
+
+        it('should redirect "302" with wrong credentials', function (done) {
+
+                new HapiTest(plugin, {before: before})
+                    .then(function (hapiTest) {
+
+                        hapiTest
+                            .auth('max', 'p')
+                            .get('/')
+                            .assert(302)
+                            .end(function (res) {
+                                assert.match(res.headers.location, /login/);
+                                done();
+                            });
+                    });
+
+            }
+        );
+
+    });
 });

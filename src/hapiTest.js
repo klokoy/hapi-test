@@ -2,7 +2,7 @@ var Promise = require('es6-promise').Promise,
     Hapi = require('hapi'),
     _ = require('lodash');
 
-var HapiTest = function (plugin) {
+var HapiTest = function (plugin, options) {
     var self = this;
 
     return new Promise(function (resolve, reject) {
@@ -10,10 +10,14 @@ var HapiTest = function (plugin) {
         self.plugin = plugin;
         //options can be cleared
         self.requests = [];
-        //setup can be keept between calls
+        //setup can be kept between calls
         self.setup = {};
 
         self.server = new Hapi.Server();
+
+        if (options && options.before) {
+            options.before(self.server);
+        }
 
         self.server.pack.register({
             name: 'plugin',
@@ -137,6 +141,39 @@ HapiTest.prototype.assert = function (a, b, c) {
 
     return self;
 };
+
+//Support hapi-auth-cookie
+HapiTest.prototype.auth = function (username, password) {
+
+    var self = this;
+
+    var request = {
+        options: {
+            method: 'POST',
+            url: '/login',
+            payload: {username: username, password: password}
+        }
+    };
+
+    request.rejections = [function (result) {
+        if (result.statusCode === 401 ) {
+            return 'Login failed';
+        } else {
+            var header = result.headers['set-cookie'];
+
+            var cookie = header[0].match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
+            self.setup.headers = { cookie: 'session=' + cookie[1] };
+            return false;
+        }
+    }];
+
+
+    self.requests.push(request);
+
+    return self;
+
+};
+
 
 HapiTest.prototype.end = function (callback) {
 
