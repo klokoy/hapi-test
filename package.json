@@ -1,8 +1,12 @@
 {
     "name": "hapi-test",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Test hapi plugins with chaining method calls and assertions",
     "main": "index.js",
+    "repository" : {
+        "type" : "git",
+        "url" : "https://github.com/klokoy/hapi-test.git"
+    },
     "scripts": {
         "test": "mocha test"
     },
