@@ -1,6 +1,8 @@
 #hapi-test
 Test hapi plugins with chaining method calls and assertions.
 
+[![Build Status](https://travis-ci.org/klokoy/hapi-test.svg?branch=master)](https://travis-ci.org/klokoy/hapi-test)
+
 #Assertions
 ###end(result)
 Using the end method you can write your own assertions in anyway you want.
