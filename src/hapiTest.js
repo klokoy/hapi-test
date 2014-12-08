@@ -27,15 +27,15 @@ var HapiTest = function (plugins, options) {
 HapiTest.prototype._init = function (callback) {
     var self = this;
 
-
-    self.server = new Hapi.Server();
+    self.server = new Hapi.Server();    
+    self.server.connection({port:8888})
 
     if (self.options && self.options.before) {
         self.options.before(self.server);
     }
 
     self.plugins.forEach(function (plugin, index) {
-        self.server.pack.register({
+        self.server.register({
             name: 'plugin' + index,
             version: '0.0.1',
             register: plugin.register
@@ -211,8 +211,12 @@ HapiTest.prototype.end = function (callback) {
         //run all request, return result in callback for the last request
         function handleRequest(n) {
             var request = self.requests[n];
+
+            var o = _.merge(request.options, self.setup);
+
             self.server.inject(_.merge(request.options, self.setup), function (result) {
                 //If rejections for this request has been registered run them and collect errs
+
                 if (request.rejections) {
                     request.rejections.forEach(function (rejection) {
                         var failed = rejection(result);

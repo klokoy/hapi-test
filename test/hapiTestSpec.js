@@ -24,6 +24,8 @@ describe('hapi-test', function () {
             }
         };
 
+        plugin.register.attributes = {name: 'test'};
+
 
         it('should support GET', function (done) {
             hapiTest(plugin)
@@ -75,6 +77,8 @@ describe('hapi-test', function () {
                 next();
             }
         };
+
+        plugin.register.attributes = {name: 'test'};
 
         it('assert a number should check the status code', function (done) {
             hapiTest(plugin)
@@ -143,6 +147,7 @@ describe('hapi-test', function () {
                     next();
                 }
             };
+            plugin1.register.attributes = {name: 'testPlugin1'};
 
             var plugin2 = {
                 register: function (plugin, options, next) {
@@ -160,6 +165,7 @@ describe('hapi-test', function () {
                     next();
                 }
             };
+            plugin2.register.attributes = {name: 'testPlugin2'};
 
             hapiTest([plugin1, plugin2])
                 .get('/one')
@@ -198,6 +204,8 @@ describe('hapi-test', function () {
             }
         };
 
+        plugin.register.attributes = {name: 'test'};
+
 
         var max = {name: 'Max', _id: 1},
             lui = {name: 'Lui', _id: 2};
@@ -233,9 +241,11 @@ describe('hapi-test', function () {
             }
         };
 
+        plugin.register.attributes = {name: 'test'};
+
         //function to setup auth on the server
         var before = function (server) {
-            server.pack.register(require('hapi-auth-cookie'), function (err) {
+            server.register(require('hapi-auth-cookie'), function (err) {
 
                 server.auth.strategy('session', 'cookie', {
                     password: 'secret',

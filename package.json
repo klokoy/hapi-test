@@ -1,6 +1,6 @@
 {
   "name": "hapi-test",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Test hapi plugins with chaining method calls and assertions",
   "main": "index.js",
   "repository": {
@@ -18,13 +18,13 @@
   "author": "Kim Lokøy",
   "license": "MIT",
   "dependencies": {
-    "hapi": "^6.0.2",
+    "hapi": "^8.0.0-rc9",
     "lodash": "^2.4.1"
   },
   "devDependencies": {
-    "boom": "^2.4.2",
+    "boom": "^2.6.1",
     "chai": "^1.9.1",
-    "hapi-auth-cookie": "^1.3.1",
+    "hapi-auth-cookie": "^2.0.0-rc2",
     "mocha": "^1.21.3"
   }
 }
