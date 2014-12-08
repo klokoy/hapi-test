@@ -1,6 +1,6 @@
 {
   "name": "hapi-test",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Test hapi plugins with chaining method calls and assertions",
   "main": "index.js",
   "repository": {
