@@ -24,7 +24,7 @@
   "devDependencies": {
     "boom": "^2.6.1",
     "chai": "^1.9.1",
-    "hapi-auth-cookie": "^2.0.0-rc2"
+    "hapi-auth-cookie": "^2.0.0-rc2",
     "mocha": "^1.21.3"
   }
 }
