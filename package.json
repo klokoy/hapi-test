@@ -18,13 +18,13 @@
   "author": "Kim Lokøy",
   "license": "MIT",
   "dependencies": {
-    "hapi": "^8.0.0-rc9",
-    "lodash": "^2.4.1"
+    "hapi": "^8.4.0",
+    "lodash": "^3.6.0"
   },
   "devDependencies": {
     "boom": "^2.6.1",
-    "chai": "^1.9.1",
-    "hapi-auth-cookie": "^2.0.0-rc2",
-    "mocha": "^1.21.3"
+    "chai": "^2.1.2",
+    "hapi-auth-cookie": "^2.0.0",
+    "mocha": "^2.2.1"
   }
 }
