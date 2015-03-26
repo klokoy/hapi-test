@@ -183,7 +183,7 @@ HapiTest.prototype.auth = function (username, password) {
     };
 
     request.rejections = [function (result) {
-        if (result.statusCode === 401) {
+        if (result.statusCode >= 400) {
             return false;
         } else {
             var header = result.headers['set-cookie'];
