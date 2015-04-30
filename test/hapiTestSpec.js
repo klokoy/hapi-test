@@ -298,7 +298,7 @@ describe('hapi-test', function() {
             hapiTest(plugin, {
                     before: before
                 })
-                .auth('max', 'max')
+                .auth('/login', 'max', 'max')
                 .get('/')
                 .end(function(res) {
                     assert.equal(res.payload, 1);
@@ -312,7 +312,7 @@ describe('hapi-test', function() {
             hapiTest(plugin, {
                     before: before
                 })
-                .auth('max', 'p')
+                .auth('/login', 'max', 'p')
                 .get('/')
                 .assert(302)
                 .end(function(res) {
