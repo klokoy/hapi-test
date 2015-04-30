@@ -170,14 +170,14 @@ HapiTest.prototype.assert = function (a, b, c) {
 };
 
 //Support hapi-auth-cookie
-HapiTest.prototype.auth = function (username, password) {
+HapiTest.prototype.auth = function (url, username, password) {
 
     var self = this;
 
     var request = {
         options: {
             method: 'POST',
-            url: '/login',
+            url: url,
             payload: {username: username, password: password}
         }
     };
@@ -193,7 +193,6 @@ HapiTest.prototype.auth = function (username, password) {
             return false;
         }
     }];
-
 
     self.requests.push(request);
 
