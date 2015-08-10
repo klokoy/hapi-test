@@ -27,7 +27,7 @@ var HapiTest = function (plugins, options) {
 HapiTest.prototype._init = function (callback) {
     var self = this;
 
-    self.server = new Hapi.Server();    
+    self.server = new Hapi.Server();
     self.server.connection({port:8888})
 
     if (self.options && self.options.before) {
@@ -170,33 +170,10 @@ HapiTest.prototype.assert = function (a, b, c) {
 };
 
 //Support hapi-auth-cookie
-HapiTest.prototype.auth = function (url, username, password) {
+HapiTest.prototype.auth = function (user) {
 
-    var self = this;
-
-    var request = {
-        options: {
-            method: 'POST',
-            url: url,
-            payload: {username: username, password: password}
-        }
-    };
-
-    request.rejections = [function (result) {
-        if (result.statusCode >= 400) {
-            return false;
-        } else {
-            var header = result.headers['set-cookie'];
-
-            var cookie = header[0].match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
-            self.setup.headers = { cookie: 'session=' + cookie[1] };
-            return false;
-        }
-    }];
-
-    self.requests.push(request);
-
-    return self;
+    this.credentials = user;
+    return this;
 
 };
 
@@ -211,9 +188,13 @@ HapiTest.prototype.end = function (callback) {
         function handleRequest(n) {
             var request = self.requests[n];
 
-            var o = _.merge(request.options, self.setup);
+            var injectOptions = _.merge(request.options, self.setup);
+            if (self.credentials) {
+                injectOptions.credentials = self.credentials;
+            }
 
-            self.server.inject(_.merge(request.options, self.setup), function (result) {
+
+            self.server.inject(injectOptions, function (result) {
                 //If rejections for this request has been registered run them and collect errs
 
                 if (request.rejections) {

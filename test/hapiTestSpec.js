@@ -231,10 +231,11 @@ describe('hapi-test', function() {
 
                 plugin.route([{
                     method: 'GET',
-                    path: '/',
+                    path: '/user',
                     config: {
                         handler: function(request, reply) {
-                            reply(1);
+
+                            reply(request.auth.credentials);
                         },
                         auth: 'session'
                     }
@@ -259,64 +260,27 @@ describe('hapi-test', function() {
                     isSecure: false
                 });
 
-                server.route([{
-                    method: 'POST',
-                    path: '/login',
-                    config: {
-                        handler: function(request, reply) {
-
-                            var user = {
-                                id: 1,
-                                name: 'max',
-                                password: 'max'
-                            };
-
-                            if (request.payload.username !== 'max' || request.payload.password !== 'max') {
-                                return reply(Boom.unauthorized('wrong credentials'));
-                            }
-
-                            request.auth.session.set(user);
-                            return reply.redirect('/')
-                        },
-                        auth: {
-                            mode: 'try',
-                            strategy: 'session'
-                        },
-                        plugins: {
-                            'hapi-auth-cookie': {
-                                redirectTo: false
-                            }
-                        }
-                    }
-                }]);
             });
         };
 
 
-        it('should support hapi-auth-cookie', function(done) {
+
+        it('should bypass authentication with credentials given to auth', function(done) {
+
+            var user = {name: 'max', age: 8};
 
             hapiTest(plugin, {
                     before: before
                 })
-                .auth('/login', 'max', 'max')
-                .get('/')
+                .auth(user)
+                .get('/user')
+                .assert(200)
                 .end(function(res) {
-                    assert.equal(res.payload, 1);
-                    done();
-                });
+                    var authenticatedUser = JSON.parse(res.payload);
 
-        });
+                    assert.equal(authenticatedUser.name, user.name);
+                    assert.equal(authenticatedUser.age, user.age);
 
-        it('should redirect "302" with wrong credentials', function(done) {
-
-            hapiTest(plugin, {
-                    before: before
-                })
-                .auth('/login', 'max', 'p')
-                .get('/')
-                .assert(302)
-                .end(function(res) {
-                    assert.match(res.headers.location, /login/);
                     done();
                 });
 
