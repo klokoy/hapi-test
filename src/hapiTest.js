@@ -2,19 +2,20 @@ var Hapi = require('hapi'),
     _ = require('lodash');
 
 
-module.exports = function (plugins, options) {
-    return new HapiTest(plugins, options);
+module.exports = function(options) {
+
+    return new HapiTest(options);
 };
 
-var HapiTest = function (plugins, options) {
+var HapiTest = function(options) {
     var self = this;
 
-    if (_.isArray(plugins)) {
-        self.plugins = plugins;
+    if (options.server) {
+        self.server = options.server;
     } else {
-        self.plugins = [plugins];
+        self.plugins = options.plugins;
     }
-    //options can be cleared
+    //requests can be cleared
     self.requests = [];
     //setup can be kept between calls
     self.setup = {};
@@ -24,31 +25,40 @@ var HapiTest = function (plugins, options) {
     return self;
 };
 
-HapiTest.prototype._init = function (callback) {
+HapiTest.prototype._init = function(callback) {
     var self = this;
 
-    self.server = new Hapi.Server();
-    self.server.connection({port:8888})
+    if (!self.server) {
+        //If I do not have a server create one
+        self.server = new Hapi.Server();
+        self.server.connection({
+            port: 8888
+        })
 
-    if (self.options && self.options.before) {
-        self.options.before(self.server);
+        if (self.options && self.options.before) {
+            self.options.before(self.server);
+        }
+
+        self.plugins.forEach(function(plugin, index) {
+            self.server.register({
+                name: 'plugin' + index,
+                version: '0.0.1',
+                register: plugin.register
+            }, function() {
+                if (index === self.plugins.length - 1) {
+                    callback();
+                }
+            });
+        });
+    } else {
+        //If I have a server there is nothing to init
+        callback();
     }
 
-    self.plugins.forEach(function (plugin, index) {
-        self.server.register({
-            name: 'plugin' + index,
-            version: '0.0.1',
-            register: plugin.register
-        }, function () {
-            if (index === self.plugins.length - 1) {
-                callback();
-            }
-        });
-    })
 
 }
 
-HapiTest.prototype.get = function (url, query) {
+HapiTest.prototype.get = function(url, query) {
 
     var request = {
         options: {
@@ -66,7 +76,7 @@ HapiTest.prototype.get = function (url, query) {
     return this;
 };
 
-HapiTest.prototype.delete = function (url) {
+HapiTest.prototype.delete = function(url) {
 
     var request = {
         options: {
@@ -80,7 +90,7 @@ HapiTest.prototype.delete = function (url) {
     return this;
 };
 
-HapiTest.prototype.post = function (url, payload) {
+HapiTest.prototype.post = function(url, payload) {
 
     var request = {
         options: {
@@ -95,7 +105,7 @@ HapiTest.prototype.post = function (url, payload) {
     return this;
 };
 
-HapiTest.prototype.put = function (url, payload) {
+HapiTest.prototype.put = function(url, payload) {
 
     var request = {
         options: {
@@ -110,7 +120,7 @@ HapiTest.prototype.put = function (url, payload) {
     return this;
 };
 
-HapiTest.prototype.patch = function (url, payload) {
+HapiTest.prototype.patch = function(url, payload) {
 
     var request = {
         options: {
@@ -125,7 +135,7 @@ HapiTest.prototype.patch = function (url, payload) {
     return this;
 };
 
-HapiTest.prototype.assert = function (a, b, c) {
+HapiTest.prototype.assert = function(a, b, c) {
     var self = this;
 
     var request = _.last(this.requests);
@@ -134,7 +144,7 @@ HapiTest.prototype.assert = function (a, b, c) {
     }
 
     if (_.isNumber(a)) {
-        request.rejections.push(function (res) {
+        request.rejections.push(function(res) {
             if (res.statusCode === a) {
                 return false;
             } else {
@@ -142,25 +152,25 @@ HapiTest.prototype.assert = function (a, b, c) {
             }
         });
         if (_.isFunction(b)) {
-            self.end(function (res, errs) {
+            self.end(function(res, errs) {
                 b(errs);
             });
         }
     } else if (_.isString(a)) {
-        request.rejections.push(function (res) {
+        request.rejections.push(function(res) {
             return !res.headers[a].match(new RegExp(b));
         });
         if (_.isFunction(c)) {
-            self.end(function (res, errs) {
+            self.end(function(res, errs) {
                 c(errs);
             });
         }
     } else if (_.isFunction(a)) {
-        request.rejections.push(function (res) {
+        request.rejections.push(function(res) {
             return !a(res);
         });
         if (_.isFunction(b)) {
-            self.end(function (res, errs) {
+            self.end(function(res, errs) {
                 b(errs);
             });
         }
@@ -170,7 +180,7 @@ HapiTest.prototype.assert = function (a, b, c) {
 };
 
 //Support hapi-auth-cookie
-HapiTest.prototype.auth = function (user) {
+HapiTest.prototype.auth = function(user) {
 
     this.credentials = user;
     return this;
@@ -178,11 +188,11 @@ HapiTest.prototype.auth = function (user) {
 };
 
 
-HapiTest.prototype.end = function (callback) {
+HapiTest.prototype.end = function(callback) {
 
     var self = this;
 
-    self._init(function () {
+    self._init(function() {
 
         //run all request, return result in callback for the last request
         function handleRequest(n) {
@@ -194,11 +204,11 @@ HapiTest.prototype.end = function (callback) {
             }
 
 
-            self.server.inject(injectOptions, function (result) {
+            self.server.inject(injectOptions, function(result) {
                 //If rejections for this request has been registered run them and collect errs
 
                 if (request.rejections) {
-                    request.rejections.forEach(function (rejection) {
+                    request.rejections.forEach(function(rejection) {
                         var failed = rejection(result);
 
                         if (failed) {
