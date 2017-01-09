@@ -5,8 +5,7 @@ var assert = require('chai').assert,
 
 describe('hapi-test', function() {
 
-    //Test that all verbs are supported
-    describe('verbs', function() {
+    describe('All verbs are supported', function () {
 
         //simple plugin with all supported verbs
         var plugin = {
@@ -398,4 +397,65 @@ describe('hapi-test', function() {
         });
 
     });
+
+    describe('promises', function () {
+
+        var plugin = {
+            register: function (plugin, options, next) {
+
+                plugin.route([{
+                    method: 'GET',
+                    path: '/one',
+                    handler: function (request, reply) {
+                        reply(1);
+                    }
+                }]);
+
+                next();
+            }
+        };
+
+        plugin.register.attributes = {
+            name: 'test'
+        };
+
+        it('should return a promise for request completion', function () {
+            return hapiTest({
+                plugins: [plugin]
+            })
+                .get('/one')
+                .assert(200)
+                .then(function (response) {
+                    assert.equal(response.result, 1);
+                });
+        });
+
+        it('should support thenable with (function(response), function(error)) signature', function () {
+            return hapiTest({
+                plugins: [plugin]
+            })
+                .get('/one')
+                .assert(1000)
+                .then(function (response) {
+                    console.log('bla')
+                    assert.fail('Should not succeed');
+                }, function (error) {
+                    assert.instanceOf(error, Error, 'Should be inscance of error');
+                    assert.equal(error.message, 'the status code is: 200 but should be: 1000');
+                });
+        });
+
+        it('should support catch error handling', function () {
+            return hapiTest({
+                plugins: [plugin]
+            })
+                .get('/one')
+                .assert(1000)
+                .catch(function (error) {
+                    assert.instanceOf(error, Error, 'Should be inscance of error');
+                    assert.equal(error.message, 'the status code is: 200 but should be: 1000');
+                });
+        });
+
+    })
 });

@@ -50,6 +50,17 @@ it('should 200 on persons', function(done) {
 });
 ```
 
+Mocha also supports promises.
+
+```javascript
+
+it('should 200 on persons', function() {
+    return hapiTest({plugins: [plugin]})
+        .get('/person')
+        .assert(200)
+});
+```
+
 ###Keep instance of server to speed up tests
 If you have multiple tests on the same server / plugins you can create an instance of the server and use this in the constructor. This will speed up the tests as it does not need to create a new server and initialize the plugins for each test.
 
