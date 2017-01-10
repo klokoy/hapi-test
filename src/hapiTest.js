@@ -157,7 +157,7 @@ HapiTest.prototype.assert = function(a, b, c) {
             });
         }
     } else if (_.isString(a)) {
-        request.rejections.push(function(res) {
+        request.rejections.push(function (res) {
             return !res.headers[a].match(new RegExp(b));
         });
         if (_.isFunction(c)) {
@@ -232,3 +232,52 @@ HapiTest.prototype.end = function(callback) {
         handleRequest(0);
     })
 };
+
+HapiTest.prototype.then = function (callbackSuccess, callbackError) {
+    var self = this;
+    var promise = new Promise(function (resolve, reject) {
+        self.end(function (response, errors) {
+            if (errors) {
+                reject(getFirstError(errors));
+                return;
+            }
+
+            resolve(response);
+        })
+    })
+        .then(callbackSuccess);
+
+    if (typeof callbackError === 'function') {
+
+        promise = promise.catch(callbackError);
+    }
+    return promise;
+};
+
+HapiTest.prototype.catch = function (callbackError) {
+    var self = this;
+    var promise = new Promise(function (resolve, reject) {
+        self.end(function (response, errors) {
+            if (errors) {
+                reject(getFirstError(errors));
+                return;
+            }
+
+            resolve(response);
+        })
+    });
+
+    promise = promise.catch(callbackError);
+
+    return promise;
+};
+
+function getFirstError(any) {
+    var error = Array.isArray(any) ? any[0] : any;
+
+    if (!(error instanceof Error)) {
+        error = new Error(error);
+    }
+
+    return error;
+}
