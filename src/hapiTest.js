@@ -43,7 +43,8 @@ HapiTest.prototype._init = function(callback) {
             self.server.register({
                 name: 'plugin' + index,
                 version: '0.0.1',
-                register: plugin.register
+                register: plugin.register,
+                options: plugin.options
             }, function() {
                 if (index === self.plugins.length - 1) {
                     callback();
