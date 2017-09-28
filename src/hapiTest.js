@@ -39,17 +39,8 @@ HapiTest.prototype._init = function(callback) {
             self.options.before(self.server);
         }
 
-        self.plugins.forEach(function(plugin, index) {
-            self.server.register({
-                name: 'plugin' + index,
-                version: '0.0.1',
-                register: plugin.register
-            }, function() {
-                if (index === self.plugins.length - 1) {
-                    callback();
-                }
-            });
-        });
+        self.server.register(self.plugins, callback)
+        
     } else {
         //If I have a server there is nothing to init
         callback();
