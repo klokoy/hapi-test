@@ -178,7 +178,7 @@ HapiTest.prototype.auth = function(user) {
 
 };
 
-//Support hapi-auth-cookie
+//Support any request headers
 HapiTest.prototype.setRequestHeader = function(header) {
     this.requestHeader = header;
     return this;
