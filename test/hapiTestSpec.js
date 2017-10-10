@@ -399,7 +399,7 @@ describe('hapi-test', function() {
 
     });
 
-    describe.only('request headers', function(){
+    describe('request headers', function(){
         const customHeader = {'special-header':'special-value'};
         var plugin = {
             register: function(plugin, options, next) {
