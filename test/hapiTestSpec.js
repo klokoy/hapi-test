@@ -1,7 +1,8 @@
 var assert = require('chai').assert,
     hapiTest = require('../index.js'),
     Hapi = require('hapi'),
-    Boom = require('boom');
+    Boom = require('boom'),
+    _ = require('lodash');
 
 describe('hapi-test', function() {
 
@@ -396,6 +397,48 @@ describe('hapi-test', function() {
 
         });
 
+    });
+
+    describe('request headers', function(){
+        const customHeader = {'special-header':'special-value'};
+        var plugin = {
+            register: function(plugin, options, next) {
+                plugin.route([{
+                    method: 'GET',
+                    path: '/specialUrl',
+                    handler: function(request, reply) {
+                        if(_.isMatch(request.headers, customHeader)){
+                            reply(1);
+                        } else {
+                            reply(Boom.badRequest('I want special headers!'));
+                        }
+
+                    }
+                }]);
+                next();
+            }
+        };
+
+        plugin.register.attributes = {
+            name: 'test'
+        };
+
+        it('should pass given request headers to hapi server inject', function(done){
+            hapiTest({
+                    plugins: [plugin]
+                })
+                .get('/specialUrl')
+                .setRequestHeader(customHeader)
+                .assert(200, done);
+        });
+
+        it('should give bad request when headers not given', function(done){
+            hapiTest({
+                    plugins: [plugin]
+                })
+                .get('/specialUrl')
+                .assert(400, done);
+        });
     });
 
     describe('promises', function () {

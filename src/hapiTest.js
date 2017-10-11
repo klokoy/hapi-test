@@ -178,6 +178,12 @@ HapiTest.prototype.auth = function(user) {
 
 };
 
+//Support any request headers
+HapiTest.prototype.setRequestHeader = function(header) {
+    this.requestHeader = header;
+    return this;
+};
+
 
 HapiTest.prototype.end = function(callback) {
 
@@ -189,7 +195,7 @@ HapiTest.prototype.end = function(callback) {
         function handleRequest(n) {
             var request = self.requests[n];
 
-            var injectOptions = _.merge(request.options, self.setup);
+            var injectOptions = _.merge(request.options, self.setup, {headers: self.requestHeader});
             if (self.credentials) {
                 injectOptions.credentials = self.credentials;
             }
