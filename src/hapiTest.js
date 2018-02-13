@@ -25,28 +25,21 @@ var HapiTest = function(options) {
     return self;
 };
 
-HapiTest.prototype._init = function(callback) {
+HapiTest.prototype._init = async function() {
+    if (this.server) return Promise.resolve();
+
     var self = this;
 
-    if (!self.server) {
-        //If I do not have a server create one
-        self.server = new Hapi.Server();
-        self.server.connection({
-            port: 8888
-        })
+    //If I do not have a server create one
+    self.server = new Hapi.Server({
+        port: 8888
+    });
 
-        if (self.options && self.options.before) {
-            self.options.before(self.server);
-        }
-
-        self.server.register(self.plugins, callback)
-        
-    } else {
-        //If I have a server there is nothing to init
-        callback();
+    if (self.options && self.options.before) {
+        await self.options.before(self.server);
     }
 
-
+    return self.plugins ? self.server.register(self.plugins.map(plugin => ({plugin}))) : Promise.resolve()
 }
 
 HapiTest.prototype.get = function(url, query) {
@@ -142,29 +135,14 @@ HapiTest.prototype.assert = function(a, b, c) {
                 return 'the status code is: ' + res.statusCode + ' but should be: ' + a;
             }
         });
-        if (_.isFunction(b)) {
-            self.end(function(res, errs) {
-                b(errs);
-            });
-        }
     } else if (_.isString(a)) {
         request.rejections.push(function (res) {
             return !res.headers[a].match(new RegExp(b));
         });
-        if (_.isFunction(c)) {
-            self.end(function(res, errs) {
-                c(errs);
-            });
-        }
     } else if (_.isFunction(a)) {
         request.rejections.push(function(res) {
             return !a(res);
         });
-        if (_.isFunction(b)) {
-            self.end(function(res, errs) {
-                b(errs);
-            });
-        }
     }
 
     return self;
@@ -185,88 +163,59 @@ HapiTest.prototype.setRequestHeader = function(header) {
 };
 
 
-HapiTest.prototype.end = function(callback) {
+HapiTest.prototype.end = async function() {
 
     var self = this;
 
-    self._init(function() {
+    await self._init();
 
-        //run all request, return result in callback for the last request
-        function handleRequest(n) {
-            var request = self.requests[n];
+    //run all request, return result in callback for the last request
+    async function handleRequest(n) {
+        var request = self.requests[n];
 
-            var injectOptions = _.merge(request.options, self.setup, {headers: self.requestHeader});
-            if (self.credentials) {
-                injectOptions.credentials = self.credentials;
-            }
-
-
-            self.server.inject(injectOptions, function(result) {
-                //If rejections for this request has been registered run them and collect errs
-
-                if (request.rejections) {
-                    request.rejections.forEach(function(rejection) {
-                        var failed = rejection(result);
-
-                        if (failed) {
-                            if (!request.errs) {
-                                request.errs = [];
-                            }
-                            request.errs.push(failed);
-                        }
-                    })
-                }
-
-                if (n === self.requests.length - 1) {
-                    //If this is the last request fire the callback
-                    callback(result, request.errs);
-                } else {
-                    handleRequest(n + 1);
-                }
-            });
+        var injectOptions = _.merge(request.options, self.setup, {headers: self.requestHeader});
+        if (self.credentials) {
+            injectOptions.credentials = self.credentials;
         }
 
-        handleRequest(0);
-    })
+        // todo: catch inject errors
+        const result = await self.server.inject(injectOptions);
+
+        //If rejections for this request has been registered run them and collect errs
+        if (request.rejections) {
+            request.rejections.forEach(function(rejection) {
+                var failed = rejection(result);
+
+                if (failed) {
+                    if (!request.errs) {
+                        request.errs = [];
+                    }
+                    request.errs.push(failed);
+                }
+            })
+        }
+
+        if (n === self.requests.length - 1) {
+            //If this is the last request settle the promise
+            if (request.errs) {
+                throw request.errs;
+            } else {
+                return result;
+            }
+        } else {
+            return handleRequest(n + 1);
+        }
+    }
+
+    return handleRequest(0);
 };
 
 HapiTest.prototype.then = function (callbackSuccess, callbackError) {
-    var self = this;
-    var promise = new Promise(function (resolve, reject) {
-        self.end(function (response, errors) {
-            if (errors) {
-                reject(getFirstError(errors));
-                return;
-            }
-
-            resolve(response);
-        })
-    })
-        .then(callbackSuccess);
-
-    if (typeof callbackError === 'function') {
-
-        promise = promise.catch(callbackError);
-    }
-    return promise;
+    return this.end().then(callbackSuccess, errors => callbackError(getFirstError(errors)));
 };
 
 HapiTest.prototype.catch = function (callbackError) {
-    var self = this;
-    var promise = new Promise(function (resolve, reject) {
-        self.end(function (response, errors) {
-            if (errors) {
-                reject(getFirstError(errors));
-                return;
-            }
-
-            resolve(response);
-        })
-    });
-
-    promise = promise.catch(callbackError);
-
-    return promise;
+    return this.end().catch(errors => callbackError(getFirstError(errors)));
 };
 
 function getFirstError(any) {
