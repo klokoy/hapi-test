@@ -40,18 +40,7 @@ hapiTest({plugins: [ plugin ] })
 ```
 
 ## Async testing
-If you are using mocha you can pass in the done function to any assertion as last parameter.
-
-```javascript
-
-it('should 200 on persons', function(done) {
-    hapiTest({ plugins: [ plugin ] })
-        .get('/person')
-        .assert(200, done)
-});
-```
-
-Mocha also supports promises.
+If you are using mocha it can handle promises:
 
 ```javascript
 
@@ -74,25 +63,24 @@ var hapiTest = require('hapi-test'),
 
 var server;
 
-before(function (done) {
+before(function () {
 
-    server = new Hapi.Server();
-    server.connection({
+    server = new Hapi.Server({
         port: 8888
-    })
+    });
 
-    server.register({
+    return server.register({
         name: 'plugin',
         version: '0.0.1',
-        register: plugin.register
-    }, done);
+        plugin: plugin.register
+    });
 
 });
 
-it('can now be used', function (done) {
-    hapiTest({ server: server })
+it('can now be used', function () {
+    return hapiTest({ server })
         .get('/person')
-        .assert(200, done);
+        .assert(200);
 });
 
 ```

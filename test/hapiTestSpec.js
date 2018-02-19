@@ -9,195 +9,153 @@ describe('hapi-test', function() {
     describe('All verbs are supported', function () {
 
         //simple plugin with all supported verbs
-        var plugin = {
-            register: function(plugin, options, next) {
+        const plugin = {
+            name: 'test',
+            register: function(plugin, options) {
                 plugin.route([{
                     method: '*',
                     path: '/',
-                    handler: function(request, reply) {
-                        reply(1);
-                    }
+                    handler: () => 1
                 }]);
-
-                next();
             }
         };
 
-        plugin.register.attributes = {
-            name: 'test'
-        };
 
-
-        it('should support GET', function(done) {
-            hapiTest({
+        it('should support GET', function() {
+            return hapiTest({
                     plugins: [plugin]
                 })
                 .get('/')
-                .assert(200, done);
+                .assert(200);
         });
 
-        it('should support POST', function(done) {
-            hapiTest({
+        it('should support POST', function() {
+            return hapiTest({
                     plugins: [plugin]
                 })
                 .post('/', {})
-                .assert(200, done);
+                .assert(200);
         });
 
-        it('should support PUT', function(done) {
-            hapiTest({
+        it('should support PUT', function() {
+            return hapiTest({
                     plugins: [plugin]
                 })
                 .put('/', {})
-                .assert(200, done);
+                .assert(200);
         });
 
-        it('should support PATCH', function(done) {
-            hapiTest({
+        it('should support PATCH', function() {
+            return hapiTest({
                     plugins: [plugin]
                 })
                 .patch('/', {})
-                .assert(200, done);
+                .assert(200);
         });
 
-        it('should support DELETE', function(done) {
-            hapiTest({
+        it('should support DELETE', function() {
+            return hapiTest({
                     plugins: [plugin]
                 })
                 .delete('/')
-                .assert(200, done);
+                .assert(200);
         })
     });
 
     describe('assertions', function() {
 
-        var plugin = {
-            register: function(plugin, options, next) {
+        const plugin = {
+            name: 'test',
+            register: function(plugin, options) {
 
                 plugin.route([{
                     method: 'GET',
                     path: '/one',
-                    handler: function(request, reply) {
-                        reply(1);
-                    }
+                    handler: () => 1
                 }]);
-
-                next();
             }
         };
 
-        plugin.register.attributes = {
-            name: 'test'
-        };
-
-        it('assert a number should check the status code', function(done) {
-            hapiTest({
+        it('assert a number should check the status code', function() {
+            return hapiTest({
                     plugins: [plugin]
                 })
                 .get('/one')
-                .assert(200, done);
+                .assert(200);
         });
 
-        it('should pass assertion errors to the end method', function(done) {
-            hapiTest({
-                    plugins: [plugin]
-                })
-                .get('/one')
-                .assert(1000)
-                .end(function(result, errs) {
-                    assert(errs);
-                    assert.equal(errs[0], 'the status code is: 200 but should be: 1000');
-                    done()
-                });
+        it('should pass assertion errors to the end method', async function() {
+            try {
+                await hapiTest({ plugins: [plugin] })
+                    .get('/one')
+                    .assert(1000)
+                    .end()
+            } catch(errs) {
+                assert(errs);
+                assert.equal(errs[0], 'the status code is: 200 but should be: 1000');
+            }
         });
 
-        it('should allow passing in an assertion function', function(done) {
-            hapiTest({
-                    plugins: [plugin]
-                })
+        it('should allow passing in an assertion function', function() {
+            return hapiTest({ plugins: [plugin] })
                 .get('/one')
                 .assert(function(res) {
                     return res.statusCode === 200;
-                }, done);
-        });
-
-        it('if called with 2 strings: match headers[string1] with string2 ', function(done) {
-            hapiTest({
-                    plugins: [plugin]
-                })
-                .get('/one')
-                .assert('connection', 'keep-alive', done);
-        });
-
-        it('convert string to regex when called with 2 strings', function(done) {
-            hapiTest({
-                    plugins: [plugin]
-                })
-                .get('/one')
-                .assert('connection', 'keep', done);
-        });
-        it('should supply get response to end handler', function(done) {
-
-            hapiTest({
-                    plugins: [plugin]
-                })
-                .get('/one')
-                .end(function(res) {
-                    assert(res);
-                    assert.equal(res.result, 1);
-                    done();
                 });
+        });
 
+        it('if called with 2 strings: match headers[string1] with string2 ', function() {
+            return hapiTest({ plugins: [plugin] })
+                .get('/one')
+                .assert('connection', 'keep-alive');
+        });
+
+        it('convert string to regex when called with 2 strings', function() {
+            return hapiTest({ plugins: [plugin] })
+                .get('/one')
+                .assert('connection', 'keep');
+        });
+        it('should supply get response to end handler', async function() {
+            const res = await hapiTest({ plugins: [plugin] })
+                .get('/one')
+                .end();
+
+            assert(res);
+            assert.equal(res.result, 1);
         });
     });
 
     describe('plugins', function() {
-        it('should support multiple plugins', function(done) {
-            var plugin1 = {
-                register: function(plugin, options, next) {
+        it('should support multiple plugins', function() {
+            const plugin1 = {
+                name: 'testPlugin1',
+                register: function(plugin, options) {
 
                     plugin.route([{
                         method: 'GET',
                         path: '/one',
-                        handler: function(request, reply) {
-                            reply(1);
-                        }
+                        handler: () => 1
                     }]);
-
-                    next();
                 }
             };
-            plugin1.register.attributes = {
-                name: 'testPlugin1'
-            };
 
-            var plugin2 = {
-                register: function(plugin, options, next) {
+            const plugin2 = {
+                name: 'testPlugin2',
+                register: function(plugin, options) {
 
                     plugin.route([{
                         method: 'GET',
                         path: '/two',
-                        handler: function(request, reply) {
-                            reply(2);
-                        }
+                        handler: () => 2
                     }]);
-
-                    next();
                 }
             };
 
-            plugin2.register.attributes = {
-                name: 'testPlugin2'
-            };
-
-            hapiTest({
-                    plugins: [plugin1, plugin2]
-                })
+            return hapiTest({ plugins: [plugin1, plugin2] })
                 .get('/one')
                 .assert(200)
                 .get('/two')
-                .assert(200, done);
-
+                .assert(200);
         })
     });
 
@@ -205,111 +163,81 @@ describe('hapi-test', function() {
 
         var server;
 
-        before(function(done) {
+        before(function() {
 
-            server = new Hapi.Server();
-
-            server.connection({
+            server = new Hapi.Server({
                 port: 8888
             });
 
-            var plugin = {
-                register: function(plugin, options, next) {
+            const plugin = {
+                name: 'plugin',
+                version: '0.0.1',
+                register: function(plugin, options) {
                     plugin.route([{
                         method: '*',
                         path: '/',
-                        handler: function(request, reply) {
-                            reply(1);
-                        }
+                        handler: () => 2
                     }]);
-
-                    next();
                 }
             };
 
-            plugin.register.attributes = {
-                name: 'test'
-            };
-
-            server.register({
-                name: 'plugin',
-                version: '0.0.1',
-                register: plugin.register
-            }, done);
+            return server.register({plugin});
         })
 
-        it('should support GET', function(done) {
-            hapiTest({
-                    server: server
-                })
+        it('should support GET', function() {
+            return hapiTest({ server: server })
                 .get('/')
-                .assert(200, done);
+                .assert(200);
         });
 
-        it('should support POST', function(done) {
-            hapiTest({
-                    server: server
-                })
+        it('should support POST', function() {
+            return hapiTest({ server: server })
                 .post('/', {})
-                .assert(200, done);
+                .assert(200);
         });
 
-        it('should support PUT', function(done) {
-            hapiTest({
-                    server: server
-                })
+        it('should support PUT', function() {
+            return hapiTest({ server: server })
                 .put('/', {})
-                .assert(200, done);
+                .assert(200);
         });
 
-        it('should support PATCH', function(done) {
-            hapiTest({
-                    server: server
-                })
+        it('should support PATCH', function() {
+            return hapiTest({ server: server })
                 .patch('/', {})
-                .assert(200, done);
+                .assert(200);
         });
 
-        it('should support DELETE', function(done) {
-            hapiTest({
-                    server: server
-                })
+        it('should support DELETE', function() {
+            return hapiTest({ server: server })
                 .delete('/')
-                .assert(200, done);
+                .assert(200);
         })
 
 
     });
 
-    it('should trigger queued requests', function(done) {
-        var plugin = {
-            register: function(plugin, options, next) {
+    it('should trigger queued requests', async function() {
+        const plugin = {
+            name: 'test',
+            register: function(plugin, options) {
 
                 var persons = [];
 
                 plugin.route([{
                     method: 'POST',
                     path: '/persons',
-                    handler: function(request, reply) {
+                    handler: request => {
                         persons.push(request.payload);
-                        reply(true);
+                        return true;
                     }
                 }, {
                     method: 'GET',
                     path: '/persons',
-                    handler: function(request, reply) {
-                        reply(persons);
-                    }
+                    handler: () => persons
                 }]);
-
-                next();
             }
         };
-
-        plugin.register.attributes = {
-            name: 'test'
-        };
-
 
         var max = {
                 name: 'Max',
@@ -319,147 +247,101 @@ describe('hapi-test', function() {
                 name: 'Lui',
                 _id: 2
             };
-        hapiTest({
-                plugins: [plugin]
-            })
+
+        const res = await hapiTest({ plugins: [plugin] })
             .post('/persons', max)
             .post('/persons', lui)
             .get('/persons')
-            .end(function(res) {
-                assert(res);
-                assert.deepEqual([max, lui], res.result);
-                done();
-            });
+            .end();
+
+        assert(res);
+        assert.deepEqual([max, lui], res.result);
     });
 
     describe('hapi-auth-cookie', function() {
-        var plugin = {
-            register: function(plugin, options, next) {
+        const plugin = {
+            name: 'test',
+            register: function(plugin, options) {
 
                 plugin.route([{
                     method: 'GET',
                     path: '/user',
                     config: {
-                        handler: function(request, reply) {
-
-                            reply(request.auth.credentials);
-                        },
+                        handler: request => request.auth.credentials,
                         auth: 'session'
                     }
                 }]);
-
-                next();
             }
         };
 
-        plugin.register.attributes = {
-            name: 'test'
-        };
-
         //function to setup auth on the server
-        var before = function(server) {
-            server.register(require('hapi-auth-cookie'), function(err) {
+        const before = async function(server) {
+            await server.register(require('hapi-auth-cookie'))
 
-                server.auth.strategy('session', 'cookie', {
-                    password: 'secret',
-                    cookie: 'session',
-                    redirectTo: '/login',
-                    isSecure: false
-                });
-
+            server.auth.strategy('session', 'cookie', {
+                password: 'secret',
+                cookie: 'session',
+                redirectTo: '/login',
+                isSecure: false
             });
         };
 
+        it('should bypass authentication with credentials given to auth', async function() {
+            const user = { name: 'max', age: 8 };
 
-
-        it('should bypass authentication with credentials given to auth', function(done) {
-
-            var user = {
-                name: 'max',
-                age: 8
-            };
-
-            hapiTest({
-                    plugins: [plugin],
-                    before: before
-                })
+            const res = await hapiTest({ plugins: [plugin], before })
                 .auth(user)
                 .get('/user')
                 .assert(200)
-                .end(function(res) {
-                    var authenticatedUser = JSON.parse(res.payload);
+                .end();
 
-                    assert.equal(authenticatedUser.name, user.name);
-                    assert.equal(authenticatedUser.age, user.age);
+            const authenticatedUser = JSON.parse(res.payload);
 
-                    done();
-                });
-
+            assert.equal(authenticatedUser.name, user.name);
+            assert.equal(authenticatedUser.age, user.age);
         });
 
     });
 
     describe('request headers', function(){
         const customHeader = {'special-header':'special-value'};
-        var plugin = {
-            register: function(plugin, options, next) {
+        const plugin = {
+            name: 'test',
+            register: function(plugin, options) {
                 plugin.route([{
                     method: 'GET',
                     path: '/specialUrl',
-                    handler: function(request, reply) {
-                        if(_.isMatch(request.headers, customHeader)){
-                            reply(1);
-                        } else {
-                            reply(Boom.badRequest('I want special headers!'));
-                        }
-
-                    }
+                    handler: request => _.isMatch(request.headers, customHeader) ? 1 : Boom.badRequest('I want special headers!')
                 }]);
-                next();
             }
         };
 
-        plugin.register.attributes = {
-            name: 'test'
-        };
-
-        it('should pass given request headers to hapi server inject', function(done){
-            hapiTest({
-                    plugins: [plugin]
-                })
+        it('should pass given request headers to hapi server inject', function() {
+            return hapiTest({ plugins: [plugin] })
                 .get('/specialUrl')
                 .setRequestHeader(customHeader)
-                .assert(200, done);
+                .assert(200);
         });
 
-        it('should give bad request when headers not given', function(done){
-            hapiTest({
-                    plugins: [plugin]
-                })
+        it('should give bad request when headers not given', function() {
+            return hapiTest({ plugins: [plugin] })
                 .get('/specialUrl')
-                .assert(400, done);
+                .assert(400);
         });
     });
 
     describe('promises', function () {
 
-        var plugin = {
-            register: function (plugin, options, next) {
+        const plugin = {
+            name: 'test',
+            register: function (plugin, options) {
 
                 plugin.route([{
                     method: 'GET',
                     path: '/one',
-                    handler: function (request, reply) {
-                        reply(1);
-                    }
+                    handler: () => 1,
                 }]);
-
-                next();
             }
-        };
-
-        plugin.register.attributes = {
-            name: 'test'
         };
 
         it('should return a promise for request completion', function () {
