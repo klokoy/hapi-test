@@ -57,7 +57,7 @@ If you have multiple tests on the same server / plugins you can create an instan
 ```javascript
 // example using mocha
 var hapiTest = require('hapi-test'),
-    Hapi = require('Hapi'),
+    Hapi = require('@hapi/hapi'),
     plugin = require('your-plugin'),
     assert = require('chai').assert;
 
