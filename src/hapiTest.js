@@ -151,7 +151,10 @@ class HapiTest {
     }
 
     then(callbackSuccess, callbackError) {
-        return this.end().then(callbackSuccess, errors => callbackError && callbackError(getFirstError(errors)));
+        return this.end().then(callbackSuccess, errors => callbackError
+            ? callbackError(getFirstError(errors))
+            : Promise.reject(getFirstError(errors))
+        );
     }
 
     catch(callbackError) {
