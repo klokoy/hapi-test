@@ -84,6 +84,20 @@ describe('hapi-test', function () {
                 .assert(200);
         });
 
+        it('should reject when using assertions with thenables', async function () {
+            try {
+                await hapiTest({
+                    plugins: [plugin]
+                })
+                    .get('/one')
+                    .assert(1000)
+                    .then(() => {});
+                throw new Error('Promise was resolved when a rejection was expected');
+            } catch (err) {
+                assert.equal(err.message, 'the status code is: 200 but should be: 1000');
+            }
+        });
+
         it('should pass assertion errors to the end method', async function () {
             try {
                 await hapiTest({ plugins: [plugin] })
